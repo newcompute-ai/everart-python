@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "everart"
+version = "0.1.0"
+description = "Python client for EverArt REST API"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "NewCompute, Inc." }]
+requires-python = ">=3.8"
+dependencies = [
+    "python-dotenv~=1.0",
+    "requests~=2.32"
+]
+
+[project.urls]
+homepage = "https://everart.ai"
+repository = "https://github.com/newcompute-ai/everart-python"
+
+[tool.setuptools]
+packages = ["everart"]
