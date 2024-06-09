@@ -1,7 +1,7 @@
 import time
 
 import everart
-from everart.v1 import (
+from everart import (
   PredictionType,
   PredictionStatus,
 )

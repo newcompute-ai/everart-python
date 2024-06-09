@@ -5,12 +5,12 @@ from typing import (
     List
 )
 
-from ..util import (
+from everart.util import (
     make_url,
     APIVersion,
     EverArtError
 )
-from ..client_interface import ClientInterface
+from everart.client_interface import ClientInterface
 
 class PredictionStatus(Enum):
     STARTING = 'starting'

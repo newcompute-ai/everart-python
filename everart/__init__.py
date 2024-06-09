@@ -2,6 +2,23 @@ from dotenv import load_dotenv
 import os
 
 from everart.client import Client
+from everart.models import (
+    ModelStatus,
+    Model,
+    ModelsFetchResponse
+)
+from everart.predictions import (
+    PredictionStatus,
+    PredictionType,
+    Prediction
+)
+
+ModelStatus = ModelStatus
+Model = Model
+ModelsFetchResponse = ModelsFetchResponse
+PredictionStatus = PredictionStatus
+PredictionType = PredictionType
+Prediction = Prediction
 
 load_dotenv()
 
