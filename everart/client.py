@@ -1,5 +1,5 @@
-from everart.v1 import V1
-from everart.client_interface import ClientInterface
+from .v1 import V1
+from .client_interface import ClientInterface
 
 class Client(ClientInterface):
     

@@ -6,12 +6,12 @@ from typing import (
     List
 )
 
-from everart.util import (
+from ..util import (
     make_url,
     APIVersion,
     EverArtError
 )
-from everart.client_interface import ClientInterface
+from ..client_interface import ClientInterface
 
 class ModelStatus(Enum):
     PENDING = 'pending'
@@ -26,7 +26,7 @@ class Model:
         self.name = name
         self.status = status
 
-class FetchResponse:
+class ModelsFetchResponse:
     def __init__(self, models: List[Model], has_more: bool):
         self.models = models
         self.has_more = has_more
@@ -45,7 +45,7 @@ class Models():
         limit: Optional[int] = None,
         search: Optional[str] = None,
         status: Optional[ModelStatus] = None
-    ) -> FetchResponse:        
+    ) -> ModelsFetchResponse:        
         params = {}
         if before_id:
             params['before_id'] = before_id
@@ -69,7 +69,7 @@ class Models():
             and isinstance(response.json().get('models'), list) \
             and isinstance(response.json().get('has_more'), bool):
             models = [Model(**model) for model in response.json().get('models')]
-            return FetchResponse(models, response.json().get('has_more'))
+            return ModelsFetchResponse(models, response.json().get('has_more'))
 
         raise EverArtError(
             response.status_code,

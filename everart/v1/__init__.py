@@ -1,8 +1,25 @@
-from everart.client_interface import ClientInterface
-from everart.v1.models import Models
-from everart.v1.predictions import Predictions
+from ..client_interface import ClientInterface
+from .models import Models
+from .predictions import Predictions
+from .models import (
+    ModelStatus,
+    Model,
+    ModelsFetchResponse
+)
+from .predictions import (
+    PredictionStatus,
+    PredictionType,
+    Prediction
+)
 
 class V1:
+    ModelStatus = ModelStatus
+    Model = Model
+    ModelsFetchResponse = ModelsFetchResponse
+
+    PredictionStatus = PredictionStatus
+    PredictionType = PredictionType
+    Prediction = Prediction
     
     def __init__(
         self,
