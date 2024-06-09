@@ -109,9 +109,9 @@ Steps:
 import time
 
 import everart
-from everart.v1.predictions import (
+from everart.v1 import (
   PredictionType,
-  PredictionStatus
+  PredictionStatus,
 )
 
 results = everart.v1.models.fetch(limit=1)
