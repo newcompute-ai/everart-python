@@ -23,6 +23,9 @@ class Client(ClientInterface):
         self,
         api_key: str
     ) -> None:
+        if api_key is None:
+            raise ValueError("API key cannot be None")
+        
         self.api_key = api_key
 
     @property

@@ -1,4 +1,5 @@
 import requests
+import time
 from enum import Enum
 from typing import (
     Optional,
@@ -67,6 +68,31 @@ class Predictions():
             'Failed to get prediction',
             response.json()
         )
+    
+    def is_prediction_finalized(
+        self,
+        prediction: Prediction
+    ) -> bool:
+        return prediction.status in {PredictionStatus.SUCCEEDED.value, PredictionStatus.FAILED.value, PredictionStatus.CANCELED.value}
+    
+    def fetch_with_polling(
+        self,
+        id: str
+    ) -> Prediction:
+        prediction = self.fetch(id)
+
+        time_elapsed = 0
+
+        while self.is_prediction_finalized(prediction) is False:
+            prediction = self.fetch(prediction.id)
+            if self.is_prediction_finalized(prediction) is True:
+                break
+            if time_elapsed >= 240:
+                raise Exception("Prediction took too long to finalize")
+            time_elapsed += 5
+            time.sleep(5)
+
+        return prediction
   
     def create(
         self,
@@ -106,3 +132,29 @@ class Predictions():
             'Failed to get prediction',
             response.json()
         )
+    
+    def create_with_polling(
+        self,
+        model_id: str,
+        prompt: str,
+        type: PredictionType,
+        height: Optional[int] = None,
+        width: Optional[int] = None
+    ) -> Prediction:
+        predictions = self.create(
+            model_id=model_id,
+            prompt=prompt,
+            type=type,
+            image_count=1,
+            height=height,
+            width=width
+        )
+
+        if not predictions or len(predictions) == 0:
+            raise Exception("No predictions created")
+        
+        prediction = predictions[0]
+
+        prediction = self.fetch_with_polling(prediction.id)
+
+        return prediction

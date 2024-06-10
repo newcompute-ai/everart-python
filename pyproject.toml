@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "everart"
-version = "0.1.2"
+version = "0.1.3"
 description = "Python client for EverArt REST API"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -14,6 +14,9 @@ dependencies = [
     "python-dotenv~=1.0",
     "requests~=2.32"
 ]
+optional-dependencies = { dev = [
+    "pytest"
+] }
 
 [project.urls]
 homepage = "https://everart.ai"
@@ -21,3 +24,6 @@ repository = "https://github.com/newcompute-ai/everart-python"
 
 [tool.setuptools]
 packages = ["everart"]
+
+[tool.pytest.ini_options]
+testpaths = "tests/"
