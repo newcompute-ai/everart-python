@@ -14,11 +14,11 @@ from everart.util import (
 from everart.client_interface import ClientInterface
 
 class PredictionStatus(Enum):
-    STARTING = 'starting'
-    PROCESSING = 'processing'
-    SUCCEEDED = 'succeeded'
-    FAILED = 'failed'
-    CANCELED = 'canceled'
+    STARTING = 'STARTING'
+    PROCESSING = 'PROCESSING'
+    SUCCEEDED = 'SUCCEEDED'
+    FAILED = 'FAILED'
+    CANCELED = 'CANCELED'
 
 class PredictionType(Enum):
     TXT_2_IMG = 'txt2img'

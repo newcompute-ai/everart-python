@@ -14,11 +14,12 @@ from everart.util import (
 from everart.client_interface import ClientInterface
 
 class ModelStatus(Enum):
-    PENDING = 'pending'
-    PROCESSING = 'processing'
-    TRAINING = 'training'
-    READY = 'ready'
-    FAILED = 'failed'
+    PENDING = 'PENDING'
+    PROCESSING = 'PROCESSING'
+    TRAINING = 'TRAINING'
+    READY = 'READY'
+    FAILED = 'FAILED'
+    CANCELED = 'CANCELED'
 
 class Model:
     def __init__(self, id: str, name: str, status: ModelStatus):
