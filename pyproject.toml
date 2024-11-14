@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "everart"
-version = "0.1.4"
+version = "1.0.0"
 description = "Python client for EverArt REST API"
 readme = "README.md"
 license = { file = "LICENSE" }

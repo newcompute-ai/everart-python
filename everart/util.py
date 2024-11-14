@@ -1,7 +1,7 @@
 import json
 from enum import Enum
 
-EVERART_BASE_URL = "https://api.everart.ai"
+EVERART_BASE_URL = "https://api.ngrok.everart.ai"
 
 class APIVersion(Enum):
     V1 = "v1"

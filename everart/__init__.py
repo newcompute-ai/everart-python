@@ -4,21 +4,23 @@ import os
 from everart.client import Client
 from everart.models import (
     ModelStatus,
+    ModelSubject,
     Model,
     ModelsFetchResponse
 )
-from everart.predictions import (
-    PredictionStatus,
-    PredictionType,
-    Prediction
+from everart.generations import (
+    GenerationStatus,
+    GenerationType,
+    Generation
 )
 
 ModelStatus = ModelStatus
+ModelSubject = ModelSubject
 Model = Model
 ModelsFetchResponse = ModelsFetchResponse
-PredictionStatus = PredictionStatus
-PredictionType = PredictionType
-Prediction = Prediction
+GenerationStatus = GenerationStatus
+GenerationType = GenerationType
+Generation = Generation
 
 load_dotenv()
 

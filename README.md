@@ -22,15 +22,17 @@ export EVERART_API_KEY=<your key>
 
 ### Models (v1)
 - [Fetch](#fetch)
+- [Fetch Many](#fetch-many)
+- [Create](#create)
 
-### Predictions (v1)
+### Generations (v1)
 - [Create](#create)
 - [Create w/ Polling](#create-with-polling)
 - [Fetch](#fetch)
 - [Fetch w/ Polling](#fetch-with-polling)
 
 ### Examples
-- [Create Prediction with Polling](#create-prediction-with-polling)
+- [Create Generation with Polling](#create-generation-with-polling)
 
 ## Setup
 
@@ -43,18 +45,30 @@ import everart
 Useful import for types.
 ```python
 from everart import (
-    PredictionType,
-    PredictionStatus
+    GenerationType,
+    GenerationStatus
 )
 ```
 
 ## Models (v1)
 
 ### Fetch
+Fetches a model by id.
+
+```python
+model = everart.v1.models.mode(id="1234567890")
+
+if not model:
+  raise Exception("No model found")
+
+print(f"Model found: {model.name}")
+```
+
+### Fetch Many
 Fetches a list of models.
 
 ```python
-results = everart.v1.models.fetch(limit=1, search="your search here")
+results = everart.v1.models.fetch_many(limit=1, search="your search here")
 
 if not results.models or len(results.models) == 0:
   raise Exception("No models found")
@@ -63,76 +77,98 @@ model = results.models[0]
 print(f"Model found: {model.name}")
 ```
 
-## Predictions (v1)
-
 ### Create
-Creates a prediction and returns immediately. Requires polling in order to fetch prediction in finalized state.
+Creates a model and returns immediately. Requires polling in order to fetch model in finalized state.
 
 ```python
-predictions = everart.v1.predictions.create(
-  model_id=model.id,
-  prompt=f"a test image of {model.name}",
-  type=PredictionType.TXT_2_IMG
+model = everart.v1.models.create(
+  name="My Model",
+  subject=ModelSubject.OBJECT
+  image_urls=[
+    "https://images.com/1.jpeg",
+    "https://images.com/2.jpeg",
+    "https://images.com/3.jpeg",
+    "https://images.com/4.jpeg",
+    "https://images.com/5.jpeg"
+  ],
 )
 
-if not predictions or len(predictions) == 0:
-  raise Exception("No predictions created")
+if not model:
+  raise Exception("No model created")
 
-prediction = predictions[0]
+print(f"Model created: {model.id}")
+```
 
-print(f"Prediction created: {prediction.id}")
+## Generations (v1)
+
+### Create
+Creates a generation and returns immediately. Requires polling in order to fetch generation in finalized state.
+
+```python
+generations = everart.v1.generations.create(
+  model_id=model.id,
+  prompt=f"a test image of {model.name}",
+  type=GenerationType.TXT_2_IMG
+)
+
+if not generations or len(generations) == 0:
+  raise Exception("No generations created")
+
+generation = generations[0]
+
+print(f"Generation created: {generation.id}")
 ```
 
 ### Create with Polling
-Creates a prediction and polls until prediction is in a finalized state.
+Creates a generation and polls until generation is in a finalized state.
 
 ```python
-prediction = everart.v1.predictions.create_with_polling(
+generation = everart.v1.generations.create_with_polling(
     model_id=model.id, 
     prompt=f"a test image of {model.name}", 
-    type=everart.PredictionType.TXT_2_IMG,
+    type=everart.GenerationType.TXT_2_IMG,
 )
 
-if prediction.image_url is not None:
-    print(f"Prediction finalized with image: {prediction.image_url}")
+if generation.image_url is not None:
+    print(f"Generation finalized with image: {generation.image_url}")
 else:
-    print(f"Prediction finalized incomplete with status: ${prediction.status}")
+    print(f"Generation finalized incomplete with status: ${generation.status}")
 ```
 
 ### Fetch
-Fetches a prediction and returns regardless of status.
+Fetches a generation and returns regardless of status.
 
 ```python
-prediction = everart.v1.predictions.fetch(id=prediction.id)
-print(f"Prediction status: {prediction.status}")
+generation = everart.v1.generations.fetch(id=generation.id)
+print(f"Generation status: {generation.status}")
 ```
 
 ### Fetch With Polling
-Fetches prediction and polls to return prediction in a finalized state.
+Fetches generation and polls to return generation in a finalized state.
 
 ```typescript
-prediction = everart.v1.predictions.fetch_with_polling(id=prediction.id)
-console.log('Prediction:', prediction);
+generation = everart.v1.generations.fetch_with_polling(id=generation.id)
+console.log('Generation:', generation);
 ```
 
 ## Examples
 
-### Create Prediction with Polling
+### Create Generation with Polling
 
 Steps:
 - Fetch Models
-- Create Predictions
-- Fetch Prediction w/ polling until succeeded
+- Create Generations
+- Fetch Generation w/ polling until succeeded
 ```python
 import time
 
 import everart
 from everart import (
-  PredictionType,
-  PredictionStatus,
+  GenerationType,
+  GenerationStatus,
 )
 
-results = everart.v1.models.fetch(limit=1)
+results = everart.v1.models.fetch_many(limit=1)
 
 if not results.models or len(results.models) == 0:
   raise Exception("No models found")
@@ -140,22 +176,22 @@ model = results.models[0]
 
 print(f"Model found: {model.name}")
 
-predictions = everart.v1.predictions.create(
+generations = everart.v1.generations.create(
   model_id=model.id,
   prompt=f"a test image of {model.name}",
-  type=PredictionType.TXT_2_IMG
+  type=GenerationType.TXT_2_IMG
 )
 
-if not predictions or len(predictions) == 0:
-  raise Exception("No predictions created")
+if not generations or len(generations) == 0:
+  raise Exception("No generations created")
 
-prediction = predictions[0]
+generation = generations[0]
 
-print(f"Prediction created: {prediction.id}")
+print(f"Generation created: {generation.id}")
 
-prediction = everart.v1.predictions.fetch_with_polling(id=prediction.id)
+generation = everart.v1.generations.fetch_with_polling(id=generation.id)
 
-print(f"Prediction succeeded! Image URL: {prediction.image_url}")
+print(f"Generation succeeded! Image URL: {generation.image_url}")
 ```
 
 ## Development and testing

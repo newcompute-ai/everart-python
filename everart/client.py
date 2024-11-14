@@ -1,6 +1,6 @@
 from everart.client_interface import ClientInterface
 from everart.models import Models
-from everart.predictions import Predictions
+from everart.generations import Generations
 
 class V1:
     def __init__(
@@ -14,8 +14,8 @@ class V1:
         return Models(client=self.client)
 
     @property
-    def predictions(self):
-        return Predictions(client=self.client)
+    def generations(self):
+        return Generations(client=self.client)
 
 class Client(ClientInterface):
     

@@ -1,5 +1,7 @@
 import requests
+from datetime import datetime
 import time
+from pydantic import BaseModel
 from enum import Enum
 from typing import (
     Optional,
@@ -13,34 +15,28 @@ from everart.util import (
 )
 from everart.client_interface import ClientInterface
 
-class PredictionStatus(Enum):
+class GenerationStatus(str, Enum):
     STARTING = 'STARTING'
     PROCESSING = 'PROCESSING'
     SUCCEEDED = 'SUCCEEDED'
     FAILED = 'FAILED'
     CANCELED = 'CANCELED'
 
-class PredictionType(Enum):
+class GenerationType(str, Enum):
     TXT_2_IMG = 'txt2img'
 
-class Prediction:
-    def __init__(
-        self, 
-        id: str, 
-        model_id: str,
-        status: PredictionStatus,
-        image_url: Optional[str],
-        type: PredictionType
-    ):
-        self.id = id
-        self.model_id = model_id
-        self.status = status
-        self.image_url = image_url
-        self.type = type
+class Generation(BaseModel):
+    id: str
+    model_id: str
+    status: GenerationStatus
+    image_url: Optional[str] = None
+    type: GenerationType
+    createdAt: datetime
+    updatedAt: datetime
 
 from everart.client_interface import ClientInterface
 
-class Predictions():
+class Generations():
     
     def __init__(
         self,
@@ -51,58 +47,58 @@ class Predictions():
     def fetch(
         self,
         id: str
-    ) -> Prediction:
-        endpoint = "predictions/" + id
+    ) -> Generation:
+        endpoint = "generations/" + id
 
         response = requests.get(
             make_url(APIVersion.V1, endpoint),
             headers=self.client.headers
         )
-        
-        if response.status_code == 200 \
-            and isinstance(response.json().get('prediction'), dict):
-            return Prediction(**response.json().get('prediction'))
+
+        if response.status_code == 200:
+            generation_data = response.json().get('generation')
+            return Generation.model_validate(generation_data)
 
         raise EverArtError(
             response.status_code,
-            'Failed to get prediction',
+            'Failed to get generation',
             response.json()
         )
     
-    def is_prediction_finalized(
+    def is_generation_finalized(
         self,
-        prediction: Prediction
+        generation: Generation
     ) -> bool:
-        return prediction.status in {PredictionStatus.SUCCEEDED.value, PredictionStatus.FAILED.value, PredictionStatus.CANCELED.value}
+        return generation.status in {GenerationStatus.SUCCEEDED.value, GenerationStatus.FAILED.value, GenerationStatus.CANCELED.value}
     
     def fetch_with_polling(
         self,
         id: str
-    ) -> Prediction:
-        prediction = self.fetch(id)
+    ) -> Generation:
+        generation = self.fetch(id)
 
         time_elapsed = 0
 
-        while self.is_prediction_finalized(prediction) is False:
-            prediction = self.fetch(prediction.id)
-            if self.is_prediction_finalized(prediction) is True:
+        while self.is_generation_finalized(generation) is False:
+            generation = self.fetch(generation.id)
+            if self.is_generation_finalized(generation) is True:
                 break
             if time_elapsed >= 240:
-                raise Exception("Prediction took too long to finalize")
+                raise Exception("Generation took too long to finalize")
             time_elapsed += 5
             time.sleep(5)
 
-        return prediction
+        return generation
   
     def create(
         self,
         model_id: str,
         prompt: str,
-        type: PredictionType,
+        type: GenerationType,
         image_count: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None
-    ) -> List[Prediction]:
+    ) -> List[Generation]:
         body = {
             'prompt': prompt,
             'type': type.value
@@ -115,21 +111,21 @@ class Predictions():
         if width:
             body['width'] = width
 
-        endpoint = "models/" + model_id + "/predictions"
+        endpoint = "models/" + model_id + "/generations"
 
         response = requests.post(
             make_url(APIVersion.V1, endpoint),
             json=body,
             headers=self.client.headers
         )
-        
-        if response.status_code == 200 \
-            and isinstance(response.json().get('predictions'), list):
-            return [Prediction(**model) for model in response.json().get('predictions')]
+
+        if response.status_code == 200:
+            generations_data = response.json().get('generations', [])
+            return [Generation.model_validate(gen) for gen in generations_data]
 
         raise EverArtError(
             response.status_code,
-            'Failed to get prediction',
+            'Failed to get generation',
             response.json()
         )
     
@@ -137,11 +133,11 @@ class Predictions():
         self,
         model_id: str,
         prompt: str,
-        type: PredictionType,
+        type: GenerationType,
         height: Optional[int] = None,
         width: Optional[int] = None
-    ) -> Prediction:
-        predictions = self.create(
+    ) -> Generation:
+        generations = self.create(
             model_id=model_id,
             prompt=prompt,
             type=type,
@@ -150,11 +146,11 @@ class Predictions():
             width=width
         )
 
-        if not predictions or len(predictions) == 0:
-            raise Exception("No predictions created")
+        if not generations or len(generations) == 0:
+            raise Exception("No generations created")
         
-        prediction = predictions[0]
+        generation = generations[0]
 
-        prediction = self.fetch_with_polling(prediction.id)
+        generation = self.fetch_with_polling(generation.id)
 
-        return prediction
+        return generation

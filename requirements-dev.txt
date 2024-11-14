@@ -1,3 +1,4 @@
+annotated-types==0.7.0
 certifi==2024.6.2
 charset-normalizer==3.3.2
 exceptiongroup==1.2.1
@@ -5,8 +6,11 @@ idna==3.7
 iniconfig==2.0.0
 packaging==24.1
 pluggy==1.5.0
+pydantic==2.9.2
+pydantic_core==2.23.4
 pytest==8.2.2
 python-dotenv==1.0.1
 requests==2.32.3
 tomli==2.0.1
+typing_extensions==4.12.2
 urllib3==2.2.1

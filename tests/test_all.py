@@ -7,51 +7,74 @@ def test_client():
 
 @pytest.fixture
 def test_fetch_models():
-    result = everart.v1.models.fetch(limit=1)
+    result = everart.v1.models.fetch_many(limit=40)
     assert result is not None
-    assert len(result.models) == 1
-    return result.models[0]
+    ready_models = [model for model in result.models if model.status == everart.ModelStatus.READY]
+    assert len(ready_models) > 0, "No READY models found"
+    return ready_models[0]
 
 @pytest.fixture
-def test_create_prediction(test_fetch_models):
+def test_fetch_model(test_fetch_models):
     model = test_fetch_models
-    predictions = everart.v1.predictions.create(
+    result = everart.v1.models.fetch(id=model.id)
+    assert result is not None
+    return result
+
+@pytest.fixture
+def test_create_generation(test_fetch_model):
+    model = test_fetch_model
+    generations = everart.v1.generations.create(
         model_id=model.id, 
         prompt="a test image of a model", 
-        type=everart.PredictionType.TXT_2_IMG,
+        type=everart.GenerationType.TXT_2_IMG,
         image_count=1
     )
-    assert predictions is not None
-    assert len(predictions) == 1
-    return predictions[0]
+    assert generations is not None
+    assert len(generations) == 1
+    return generations[0]
 
-def test_fetch_prediction(test_create_prediction):
-    prediction_id = test_create_prediction.id
-    prediction = everart.v1.predictions.fetch(id=prediction_id)
-    assert prediction is not None
-    assert prediction.id == prediction_id
-    assert prediction.status in {
-        everart.PredictionStatus.STARTING.value, 
-        everart.PredictionStatus.PROCESSING.value, 
-        everart.PredictionStatus.SUCCEEDED.value, 
-        everart.PredictionStatus.FAILED.value,
-        everart.PredictionStatus.CANCELED.value
+def test_create_model():
+    model = everart.v1.models.create(
+        name='python sdk test',
+        subject=everart.ModelSubject.STYLE,
+        image_urls=[
+            'https://storage.googleapis.com/storage.catbird.ai/training/model/129541926348263424/data/predictions/140059236787949570/out-0.png',
+            'https://storage.googleapis.com/storage.catbird.ai/training/model/129541926348263424/data/predictions/140059236783755264/out-0.png',
+            'https://storage.googleapis.com/storage.catbird.ai/training/model/129541926348263424/data/predictions/140059236787949568/out-0.png',
+            'https://storage.googleapis.com/storage.catbird.ai/training/model/129541926348263424/data/predictions/140057613973983233/out-0.png',
+            'https://storage.googleapis.com/storage.catbird.ai/training/model/129541926348263424/data/predictions/140055275938910211/out-0.png',
+        ]
+    )
+    assert model is not None
+    return model
+
+def test_fetch_generation(test_create_generation):
+    generation_id = test_create_generation.id
+    generation = everart.v1.generations.fetch(id=generation_id)
+    assert generation is not None
+    assert generation.id == generation_id
+    assert generation.status in {
+        everart.GenerationStatus.STARTING.value, 
+        everart.GenerationStatus.PROCESSING.value, 
+        everart.GenerationStatus.SUCCEEDED.value, 
+        everart.GenerationStatus.FAILED.value,
+        everart.GenerationStatus.CANCELED.value
     }
 
-def test_fetch_prediction_with_polling(test_create_prediction):
-    prediction_id = test_create_prediction.id
-    prediction = everart.v1.predictions.fetch_with_polling(id=prediction_id)
-    assert prediction is not None
-    assert prediction.status == everart.PredictionStatus.SUCCEEDED.value
-    assert prediction.image_url is not None
+def test_fetch_generation_with_polling(test_create_generation):
+    generation_id = test_create_generation.id
+    generation = everart.v1.generations.fetch_with_polling(id=generation_id)
+    assert generation is not None
+    assert generation.status == everart.GenerationStatus.SUCCEEDED.value
+    assert generation.image_url is not None
 
-def test_create_prediction_with_polling(test_fetch_models):
-    model = test_fetch_models
-    prediction = everart.v1.predictions.create_with_polling(
+def test_create_generation_with_polling(test_fetch_model):
+    model = test_fetch_model
+    generation = everart.v1.generations.create_with_polling(
         model_id=model.id, 
         prompt="a test image of a model", 
-        type=everart.PredictionType.TXT_2_IMG,
+        type=everart.GenerationType.TXT_2_IMG,
     )
-    assert prediction is not None
-    assert prediction.status == everart.PredictionStatus.SUCCEEDED.value
-    assert prediction.image_url is not None
+    assert generation is not None
+    assert generation.status == everart.GenerationStatus.SUCCEEDED.value
+    assert generation.image_url is not None
