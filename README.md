@@ -15,6 +15,10 @@ This environment variable must be set for authentication to take place.
 export EVERART_API_KEY=<your key>
 ```
 
+## How to get a key
+Log in or sign up at [https://www.everart.ai/](https://www.everart.ai/), then navigate to the API section in the sidebar.
+
+
 ## Table of Contents
 
 ### Setup
