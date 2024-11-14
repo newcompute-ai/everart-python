@@ -151,6 +151,31 @@ generation = everart.v1.generations.fetch_with_polling(id=generation.id)
 console.log('Generation:', generation);
 ```
 
+## Public Models
+EverArt provides access to several public models that you can use for generation. Here's a list of available public models:
+
+| Model ID | Name |
+|----------|------|
+| 5000 | FLUX1.1 [pro] |
+| 9000 | FLUX1.1 [pro] (ultra) |
+| 6000 | SD 3.5 Large |
+| 7000 | Recraft V3 - Realistic |
+| 8000 | Recraft V3 - Vector |
+
+To use a public model, you can specify its ID when creating a generation:
+
+```python
+generation = everart.v1.generations.create(
+    model_id="5000",  # FLUX1.1 [pro] model ID
+    prompt="A beautiful landscape",
+    type=GenerationType.TXT_2_IMG,
+    options={
+        "image_count": 1
+    }
+)
+print('Generation:', generation)
+```
+
 ## Examples
 
 ### Create Generation with Polling
