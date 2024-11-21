@@ -18,6 +18,61 @@ export EVERART_API_KEY=<your key>
 ## How to get a key
 Log in or sign up at [https://www.everart.ai/](https://www.everart.ai/), then navigate to the API section in the sidebar.
 
+## Types
+
+### Model
+
+```python
+from everart.models import Model, ModelStatus, ModelSubject
+
+class Model(BaseModel):
+    id: str
+    name: str
+    status: ModelStatus
+    subject: ModelSubject
+    createdAt: datetime
+    updatedAt: datetime
+    estimatedCompletedAt: Optional[datetime] = None
+    thumbnailUrl: Optional[str] = None
+
+class ModelStatus(str, Enum):
+    PENDING = 'PENDING'
+    PROCESSING = 'PROCESSING'
+    TRAINING = 'TRAINING'
+    READY = 'READY'
+    FAILED = 'FAILED'
+    CANCELED = 'CANCELED'
+
+class ModelSubject(str, Enum):
+    OBJECT = 'OBJECT'
+    STYLE = 'STYLE'
+    PERSON = 'PERSON'
+```
+
+### Generation
+```python
+from everart.generations import Generation, GenerationStatus, GenerationType
+
+class Generation(BaseModel):
+    id: str
+    model_id: str
+    status: GenerationStatus
+    image_url: Optional[str] = None
+    type: GenerationType
+    createdAt: datetime
+    updatedAt: datetime
+
+class GenerationStatus(str, Enum):
+    STARTING = 'STARTING'
+    PROCESSING = 'PROCESSING'
+    SUCCEEDED = 'SUCCEEDED'
+    FAILED = 'FAILED'
+    CANCELED = 'CANCELED'
+
+class GenerationType(str, Enum):
+    TXT_2_IMG = 'txt2img'
+    IMG_2_IMG = 'img2img'
+```
 
 ## Table of Contents
 
@@ -28,6 +83,9 @@ Log in or sign up at [https://www.everart.ai/](https://www.everart.ai/), then na
 - [Fetch](#fetch)
 - [Fetch Many](#fetch-many)
 - [Create](#create)
+
+### Images (v1)
+- [Upload](#upload)
 
 ### Generations (v1)
 - [Create](#create)
@@ -85,23 +143,59 @@ print(f"Model found: {model.name}")
 Creates a model and returns immediately. Requires polling in order to fetch model in finalized state.
 
 ```python
+# Using URLs
 model = everart.v1.models.create(
-  name="My Model",
-  subject=ModelSubject.OBJECT
-  image_urls=[
-    "https://images.com/1.jpeg",
-    "https://images.com/2.jpeg",
-    "https://images.com/3.jpeg",
-    "https://images.com/4.jpeg",
-    "https://images.com/5.jpeg"
-  ],
+    name="My Custom Model",  # Model name
+    subject=ModelSubject.OBJECT,  # Model subject type
+    images=[
+        URLImageInput(value="https://example.com/image1.jpg"),
+        URLImageInput(value="https://example.com/image2.jpg"),
+        # ... more training images (minimum 5)
+    ],
+    webhook_url="https://your-webhook.com"  # Optional: Webhook URL for training updates
 )
 
-if not model:
-  raise Exception("No model created")
-
-print(f"Model created: {model.id}")
+# Using local files
+model = everart.v1.models.create(
+    name="My Custom Model",  # Model name
+    subject=ModelSubject.OBJECT,  # Model subject type
+    images=[
+        FileImageInput(path="/path/to/image1.jpg"),
+        FileImageInput(path="/path/to/image2.jpg"),
+        # ... more training images (minimum 5)
+    ],
+    webhook_url="https://your-webhook.com"  # Optional: Webhook URL for training updates
+)
 ```
+
+Supported file types:
+
+JPEG (.jpg, .jpeg)
+PNG (.png)
+WebP (.webp)
+HEIC (.heic)
+HEIF (.heif)
+
+
+## Images (v1)
+
+### Upload
+
+Get upload URLs for images.
+```python
+uploads = everart.v1.images.uploads([
+    UploadsRequestImage(filename="image1.jpg", content_type=ContentType.JPEG),
+    UploadsRequestImage(filename="image2.png", content_type=ContentType.PNG)
+])
+```
+
+Supported content types:
+
+image/jpeg
+image/png
+image/webp
+image/heic
+image/heif
 
 ## Generations (v1)
 

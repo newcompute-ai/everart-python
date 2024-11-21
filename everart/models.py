@@ -5,13 +5,22 @@ from pydantic import BaseModel
 from urllib.parse import urlencode
 from typing import (
     Optional,
-    List
+    List,
+    Union,
+    Dict,
+    Any
 )
+import uuid
 
 from everart.util import (
     make_url,
     APIVersion,
-    EverArtError
+    EverArtError,
+    get_content_type,
+    upload_file
+)
+from everart.images import (
+    UploadsRequestImage
 )
 from everart.client_interface import ClientInterface
 
@@ -36,10 +45,21 @@ class Model(BaseModel):
     createdAt: datetime
     updatedAt: datetime
     estimatedCompletedAt: Optional[datetime] = None
+    thumbnailUrl: Optional[str] = None
 
 class ModelsFetchResponse(BaseModel):
     models: List[Model]
     has_more: bool
+
+class URLImageInput(BaseModel):
+    type: str = 'url'
+    value: str
+
+class FileImageInput(BaseModel):
+    type: str = 'file'
+    path: str
+
+ImageInput = Union[URLImageInput, FileImageInput]
 
 class Models():
     
@@ -77,7 +97,7 @@ class Models():
         limit: Optional[int] = None,
         search: Optional[str] = None,
         status: Optional[ModelStatus] = None
-    ) -> ModelsFetchResponse:        
+    ) -> ModelsFetchResponse:     
         params = {}
         if before_id:
             params['before_id'] = before_id
@@ -114,13 +134,65 @@ class Models():
         self,
         name: str,
         subject: ModelSubject,
-        image_urls: List[str]
+        images: List[ImageInput],
+        webhook_url: Optional[str] = None
     ) -> Model:
-        body = {
+        if not name or not isinstance(name, str):
+            raise EverArtError(400, 'Name is required and must be a string')
+        
+        if not images or not isinstance(images, list) or len(images) == 0:
+            raise EverArtError(400, 'At least one image is required')
+
+        image_urls = [img.value for img in images if isinstance(img, URLImageInput)]
+        image_upload_tokens = []
+        
+        files = [
+            {
+                "path": img.path,
+                "name": img.path.split('/')[-1] or 'image',
+                "content_type": get_content_type(img.path.split('/')[-1]),
+                "id": str(uuid.uuid4())
+            }
+            for img in images if isinstance(img, FileImageInput)
+        ]
+
+        if files:
+            try:
+                image_uploads = self.client.v1.images.uploads(
+                    UploadsRequestImage(
+                        filename=file["name"],
+                        content_type=file["content_type"],
+                        id=file["id"]
+                    ) for file in files
+                )
+
+                for image_upload in image_uploads:
+                    file = next((f for f in files if f["id"] == image_upload.id), None)
+                    if not file:
+                        raise ValueError('Could not find associated file for upload')
+                    
+                    try:
+                        upload_file(
+                            file["path"],
+                            image_upload.upload_url,
+                            file["content_type"]
+                        )
+                        image_upload_tokens.append(image_upload.upload_token)
+                    except Exception as error:
+                        raise EverArtError(500, f"Failed to upload file {file['name']}", error)
+            
+            except Exception as error:
+                raise EverArtError(500, 'Failed during file upload process', error)
+
+        body: Dict[str, Any] = {
             'name': name,
             'subject': subject.value,
-            'image_urls': image_urls
+            'image_urls': image_urls,
+            'image_upload_tokens': image_upload_tokens
         }
+
+        if webhook_url:
+            body['webhook_url'] = webhook_url
 
         endpoint = "models"
 

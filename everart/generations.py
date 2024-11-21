@@ -24,6 +24,7 @@ class GenerationStatus(str, Enum):
 
 class GenerationType(str, Enum):
     TXT_2_IMG = 'txt2img'
+    IMG_2_IMG = 'img2img'
 
 class Generation(BaseModel):
     id: str
@@ -70,23 +71,16 @@ class Generations():
         generation: Generation
     ) -> bool:
         return generation.status in {GenerationStatus.SUCCEEDED.value, GenerationStatus.FAILED.value, GenerationStatus.CANCELED.value}
-    
+  
     def fetch_with_polling(
         self,
         id: str
     ) -> Generation:
         generation = self.fetch(id)
 
-        time_elapsed = 0
-
-        while self.is_generation_finalized(generation) is False:
-            generation = self.fetch(generation.id)
-            if self.is_generation_finalized(generation) is True:
-                break
-            if time_elapsed >= 240:
-                raise Exception("Generation took too long to finalize")
-            time_elapsed += 5
-            time.sleep(5)
+        while generation.status in {GenerationStatus.STARTING, GenerationStatus.PROCESSING}:
+            time.sleep(1)  # Changed from 5 seconds to 1 second to match TypeScript
+            generation = self.fetch(id)
 
         return generation
   
@@ -95,21 +89,27 @@ class Generations():
         model_id: str,
         prompt: str,
         type: GenerationType,
+        image: Optional[str] = None,
         image_count: Optional[int] = None,
         height: Optional[int] = None,
-        width: Optional[int] = None
+        width: Optional[int] = None,
+        webhook_url: Optional[str] = None
     ) -> List[Generation]:
         body = {
             'prompt': prompt,
             'type': type.value
         }
 
+        if image:
+            body['image'] = image
         if image_count:
             body['image_count'] = image_count
         if height:
             body['height'] = height
         if width:
             body['width'] = width
+        if webhook_url:
+            body['webhook_url'] = webhook_url
 
         endpoint = "models/" + model_id + "/generations"
 
@@ -134,16 +134,20 @@ class Generations():
         model_id: str,
         prompt: str,
         type: GenerationType,
+        image: Optional[str] = None,
         height: Optional[int] = None,
-        width: Optional[int] = None
+        width: Optional[int] = None,
+        webhook_url: Optional[str] = None
     ) -> Generation:
         generations = self.create(
             model_id=model_id,
             prompt=prompt,
             type=type,
+            image=image,
             image_count=1,
             height=height,
-            width=width
+            width=width,
+            webhook_url=webhook_url
         )
 
         if not generations or len(generations) == 0:
